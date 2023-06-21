@@ -7,12 +7,8 @@ import (
 	"os/signal"
 	"sync"
 
+	"github.com/jessevdk/go-flags"
 	"github.com/valyala/fasthttp"
-)
-
-const (
-	// httpAddr адрес HTTP сервера
-	httpAddr string = ":8080"
 )
 
 // main точка входа в приложение
@@ -23,6 +19,14 @@ func main() {
 		}
 	}()
 
+	var cfg Config
+	parser := flags.NewParser(&cfg, flags.Default)
+	_, err := parser.Parse()
+	if err != nil {
+		fmt.Printf("error on parse config: %v\n", err)
+		os.Exit(1)
+	}
+
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
@@ -32,7 +36,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		fmt.Printf("starting HTTP server:%s\n", httpAddr)
+		fmt.Printf("starting HTTP private server:%s\n", cfg.HttpPrivateListen)
 		server := fasthttp.Server{
 			Handler: func(req *fasthttp.RequestCtx) {
 				req.SuccessString("text/html; charset=utf-8", "success...")
@@ -43,13 +47,13 @@ func main() {
 			<-ctx.Done()
 			err := server.Shutdown()
 			if err != nil {
-				fmt.Printf("error on shutdown HTTP server: %v\n", err)
+				fmt.Printf("error on shutdown HTTP private server: %v\n", err)
 			}
 		}()
 
-		err := server.ListenAndServe(httpAddr)
+		err := server.ListenAndServe(cfg.HttpPrivateListen)
 		if err != nil {
-			fmt.Printf("error on listen and serve HTTP server: %v\n", err)
+			fmt.Printf("error on listen and serve HTTP private server: %v\n", err)
 		}
 
 		cancel()
