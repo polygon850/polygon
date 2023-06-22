@@ -81,8 +81,7 @@ func initConfig() (*Config, error) {
 
 // initLogger создает и настраивает новый экземпляр логгера
 func initLogger() (*zap.Logger, error) {
-	var cfg zap.Config
-	cfg = zap.NewProductionConfig()
+	cfg := zap.NewProductionConfig()
 	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
 
 	return cfg.Build()
