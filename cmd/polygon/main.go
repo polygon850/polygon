@@ -18,9 +18,7 @@ import (
 
 // main точка входа в приложение
 func main() {
-	var cfg = new(Config)
-	parser := flags.NewParser(cfg, flags.HelpFlag|flags.PassDoubleDash)
-	_, err := parser.Parse()
+	cfg, err := initConfig()
 	if err != nil {
 		log.Fatal(fatalJsonLog("failed to parse config", err))
 	}
@@ -70,6 +68,15 @@ func main() {
 
 	wg.Wait()
 	logger.Info("application completed")
+}
+
+// initConfig инициализирует и парсит конфиг прилжения
+func initConfig() (*Config, error) {
+	var cfg = new(Config)
+	parser := flags.NewParser(cfg, flags.HelpFlag|flags.PassDoubleDash)
+	_, err := parser.Parse()
+
+	return cfg, err
 }
 
 // initLogger создает и настраивает новый экземпляр логгера
