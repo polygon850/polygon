@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(fatalJsonLog("failed to parse config", err))
 	}
 
-	logger, err := initLogger()
+	logger, err := initLogger(cfg.LogLevel, cfg.LogJSON)
 	if err != nil {
 		log.Fatal(fatalJsonLog("failed to init logger", err))
 	}
@@ -70,7 +70,7 @@ func main() {
 	logger.Info("application completed")
 }
 
-// initConfig инициализирует и парсит конфиг прилжения
+// initConfig инициализирует и парсит конфиг приложения
 func initConfig() (*Config, error) {
 	var cfg = new(Config)
 	parser := flags.NewParser(cfg, flags.HelpFlag|flags.PassDoubleDash)
@@ -80,9 +80,20 @@ func initConfig() (*Config, error) {
 }
 
 // initLogger создает и настраивает новый экземпляр логгера
-func initLogger() (*zap.Logger, error) {
+func initLogger(logLevel string, isLogJson bool) (*zap.Logger, error) {
+	lvl := zap.InfoLevel
+	err := lvl.UnmarshalText([]byte(logLevel))
+	if err != nil {
+		return nil, fmt.Errorf("error on unmarshal log level: %w", err)
+	}
+
 	cfg := zap.NewProductionConfig()
+	cfg.Level = zap.NewAtomicLevelAt(lvl)
 	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
+	if !isLogJson {
+		cfg.Encoding = "console"
+		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	}
 
 	return cfg.Build()
 }
@@ -96,6 +107,7 @@ func fatalJsonLog(msg string, err error) string {
 	if err != nil {
 		errString = err.Error()
 	}
+
 	return fmt.Sprintf(
 		`{"level":"fatal","ts":"%s","msg":"%s","error":"%s"}`,
 		time.Now().Format(time.RFC3339Nano),
