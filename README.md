@@ -1,6 +1,6 @@
 # Polygon demo microservice
 
-![polygon workflow](https://github.com/polygon850/polygon/actions/workflows/main.yml/badge.svg?branch=master)
+![polygon workflow](https://github.com/polygon850/polygon/actions/workflows/master.yml/badge.svg?branch=master)
 
 Микросервис для демонстрации возможностей Golang стека
 
@@ -17,7 +17,8 @@ docker build -t polygon850/polygon .
 ## Аргументы и переменные окружения
 * `CL_LOG_LEVEL` - уровень логирования
 * `CL_LOG_JSON` - флаг устанавливающий JSON-формат логов
-* `CL_HTTP_PRIVATE_LISTEN` - хост и порт, который будет слушать HTTP сервер (в формате host:port)
+* `CL_HTTP_SERVICE_LISTEN` - хост и порт, который будет слушать служебный HTTP сервер (в формате host:port)
+* `CL_ENABLE_PPROF` - включение отладки при помощи pprof
  
 
 ## Пример запуска docker-контейнера
@@ -26,8 +27,9 @@ docker run \
   --rm \
   -it \
   -p 8080:8080 \
-  -e CL_HTTP_PRIVATE_LISTEN=:8080 \
   -e CL_LOG_LEVEL=info \
+  -e CL_HTTP_SERVICE_LISTEN=:8080 \
+  --env-file=.env.local \
   --name polygon \
   polygon850/polygon
 ```

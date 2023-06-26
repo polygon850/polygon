@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/jessevdk/go-flags"
-	"github.com/valyala/fasthttp"
+	"github.com/polygon850/polygon/internal/api/http/service"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -43,24 +43,10 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		logger.Info("starting HTTP private server", zap.String("address", cfg.HttpPrivateListen))
-		server := fasthttp.Server{
-			Handler: func(req *fasthttp.RequestCtx) {
-				req.SuccessString("text/html; charset=utf-8", "success...")
-			},
-		}
-
-		go func() {
-			<-ctx.Done()
-			err := server.Shutdown()
-			if err != nil {
-				logger.Error("error on shutdown HTTP private server", zap.Error(err))
-			}
-		}()
-
-		err := server.ListenAndServe(cfg.HttpPrivateListen)
+		logger.Info("starting HTTP service server", zap.String("address", cfg.HttpServiceListen))
+		err := service.ListenAndServe(ctx, cfg.HttpServiceListen, cfg.EnablePprof, logger)
 		if err != nil {
-			logger.Error("error on listen and serve HTTP private server", zap.Error(err))
+			logger.Error("error on listen and serve HTTP service server", zap.Error(err))
 		}
 
 		cancel()
