@@ -43,8 +43,9 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		logger.Info("starting HTTP service server", zap.String("address", cfg.HttpServiceListen))
-		err := service.ListenAndServe(ctx, cfg.HttpServiceListen, cfg.EnablePprof, logger)
+		logger.Info("starting HTTP service server", zap.String("listen", cfg.HttpServiceListen))
+		errCh := service.ListenAndServe(ctx, cfg.HttpServiceListen, cfg.EnablePprof, logger)
+		err := <-errCh
 		if err != nil {
 			logger.Error("error on listen and serve HTTP service server", zap.Error(err))
 		}

@@ -13,7 +13,9 @@ import (
 const pprofUrlPrefix = "/debug/pprof"
 
 // ListenAndServe стартует служебный HTTP сервер
-func ListenAndServe(ctx context.Context, addr string, enablePprof bool, logger *zap.Logger) error {
+func ListenAndServe(ctx context.Context, addr string, enablePprof bool, logger *zap.Logger) <-chan error {
+	ctx, cancel := context.WithCancel(ctx)
+
 	r := router.New()
 	r.GET("/ping", func(ctx *fasthttp.RequestCtx) {
 		ctx.SuccessString("text/html; charset=utf-8", "PONG")
@@ -34,13 +36,25 @@ func ListenAndServe(ctx context.Context, addr string, enablePprof bool, logger *
 		Handler: r.Handler,
 	}
 
+	errCh := make(chan error)
 	go func() {
+		defer close(errCh)
+
 		<-ctx.Done()
 		err := server.Shutdown()
 		if err != nil {
-			logger.Error("error on shutdown HTTP private server", zap.Error(err))
+			errCh <- err
 		}
 	}()
 
-	return server.ListenAndServe(addr)
+	go func() {
+		err := server.ListenAndServe(addr)
+		if err != nil {
+			logger.Error("error on serve HTTP service", zap.Error(err))
+		}
+
+		cancel()
+	}()
+
+	return errCh
 }
